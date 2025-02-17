@@ -2,9 +2,9 @@ from django.contrib import admin
 from .models import User
 from django.contrib.auth.models import Group
 
-class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('id','email', 'first_name', 'last_name', 'password', 'role' , 'is_staff', 'is_superuser')
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('id','email', 'first_name', 'last_name', 'role' , 'is_staff', 'is_superuser')
     search_fields = ('first_name', 'email')
 
-admin.site.register(User, CustomUserAdmin)
-admin.site.unregister(Group)
+admin.site.register(User, UserAdmin)
+# admin.site.register(Group)

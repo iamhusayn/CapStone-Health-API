@@ -1,12 +1,20 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 from django.contrib.auth import authenticate
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'role', 'tokens')
+        fields = ['id', 'email', 'first_name', 'last_name', 'role',]
         extra_kwargs = {'tokens': {'read_only': True}}
+
+    def get_tokens(self, obj):
+        refresh = RefreshToken.for_user(obj)
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            }
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,6 +25,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
+    
+    def update(self, instance, validated_data):
+        if 'password' in validated_data:
+            instance.set_password(validated_data['password'])
+            return super().update(instance, validated_data)
+        
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
