@@ -7,4 +7,3 @@ class UserAdmin(admin.ModelAdmin):
     search_fields = ('first_name', 'email')
 
 admin.site.register(User, UserAdmin)
-# admin.site.register(Group)

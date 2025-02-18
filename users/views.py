@@ -15,73 +15,43 @@ from .models import User
 from django.views.decorators.csrf import csrf_exempt
 
 User = get_user_model()
-# class UserCreateView(generics.CreateAPIView):
-#     queryset = User.objects.all()
-#     serializer_class = 
 
-
-@api_view(['POST'])
 @csrf_exempt
-def RegisterView(request):
-    # data = request.data(user)
-    user = User.objects.create_user(
-        username=data['email'],
-        email=data['email'],
-        password=data['password'],
-        first_name=data['first_name'],
-        last_name=data['last_name'],
-        role=data['role']
-    )
+@api_view(['POST'])
+class RegisterView(APIView):
+    permission_classes = [AllowAny] 
+      
+    def RegisterView(request):
+        user = User.objects.create_user(
+            username=data['email'],
+            email=data['email'],
+            password=data['password'],
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            role=data['role']
+        )
 
-    if request.method == 'GET':
-        user = User.objects.all()
-        serializer = UserSerializer(user, many=True)
-        return Response(serializer.data, safe= False)
-    
-    elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = UserSerializer(data, data=request.data)
+        if request.method == 'GET':
+            user = User.objects.all()
+            serializer = UserSerializer(user, many=True)
+            return Response(serializer.data, safe= False)
+        
+        elif request.method == 'POST':
+            data = JSONParser().parse(request)
+            serializer = UserSerializer(data, data=request.data)
 
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({"message": "User registered successfully"}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if serializer.is_valid():
+                user = serializer.save()
+                return Response({"message": "User registered successfully"}, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-        # return Response({"message": "User registered successfully"})
-
-# @api_view(['POST'])
-# class RegisterView(APIView):
-#     permission_classes = [AllowAny]
-    
-#     def post(self, request):
-#         serializer = RegisterSerializer(data=request.data)
-#         if serializer.is_valid():
-#             user = serializer.save()
-#             return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+@csrf_exempt
 class LoginView(APIView):
     permission_classes = [AllowAny]
     
     def post(self, request):
-        # data = request.data
-        # email = data.get('email', None)
-        # password = data.get('password', None)
         serializer = LoginSerializer(data=request.data)
 
         if serializer.is_valid():
             return Response(serializer.validated_data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        # if email is None or password is None:
-        #     return Response({ "error": "Please provide both email and password" }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # user = authenticate(email=email, password=password)
-        
-        # if not user:
-        #     return Response({ "error": "Invalid credentials" }, status=status.HTTP_404_NOT_FOUND)
-        
-        # access = AccessToken.for_user(user)
-        # return Response({ "token": str(access) }, status=status.HTTP_200_OK)
-    

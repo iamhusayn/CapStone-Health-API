@@ -1,8 +1,9 @@
 from django.db import models
 from users.models import User
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import AbstractUser
 
-# class User(AbstractUser):
+# class UserDoc(AbstractUser):
 #     GENDER_CHOICES = [
 #         ('M', 'Male'),
 #         ('F', 'Female'),
