@@ -25,7 +25,7 @@ class User(AbstractBaseUser, PermissionsMixin): #PermissionsMixin
     REQUIRED_FIELDS = ['first_name', 'last_name', 'role']
     
     def __str__(self):
-        return self.email
+        return self.first_name
     
     def tokens(self):
         refresh = RefreshToken.for_user(self)

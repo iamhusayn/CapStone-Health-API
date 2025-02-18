@@ -20,4 +20,4 @@ class Doctor(models.Model):
     availability = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.user.get_full_name()
+        return self.user.get_username()
