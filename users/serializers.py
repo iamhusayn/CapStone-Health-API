@@ -1,50 +1,81 @@
-from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import serializers, viewsets, status
 from .models import User
+from django.contrib.auth.password_validation import validate_password
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
+from rest_framework.parsers import JSONParser
+from django.contrib.auth import get_user_model
 
 class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'role',]
-        extra_kwargs = {'tokens': {'read_only': True}}
-
-    def get_tokens(self, obj):
-        refresh = RefreshToken.for_user(obj)
-        return {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            }
-
-class RegisterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('email', 'first_name', 'last_name', 'role', 'password')
-        extra_kwargs = {'password': {'write_only': True}}
-    
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
-    
-    def update(self, instance, validated_data):
-        if 'password' in validated_data:
-            instance.set_password(validated_data['password'])
-            return super().update(instance, validated_data)
+           user = User.objects.create_user(**validated_data)
+  
+           return user
+
+
+
+User = get_user_model()
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=6)
+    role = serializers.ChoiceField(choices=User.ROLE_CHOICES)
+
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'phone_number', 'email', 'password', 'role']
+
+    def validate(self, data):
+        request = self.context.get('request')
         
+        # Prevent non-superusers from registering as superuser
+        if request and not request.user.is_superuser and 'is_superuser' in data:
+            raise serializers.ValidationError("You do not have permission to create a superuser.")
+
+        return data
+
+    def create(self, validated_data):
+        role = validated_data.pop('role')
+        user = User.objects.create_user(**validated_data, role=role)
+        return user
+
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    username = serializers.CharField()
     password = serializers.CharField(write_only=True)
-    tokens = serializers.SerializerMethodField()
-    
-    def get_tokens(self, obj):
-        user = authenticate(email=obj['email'], password=obj['password'])
-        if user:
-            return user.tokens()
-        raise serializers.ValidationError('Invalid credentials')
-    
+    role = serializers.ChoiceField(choices=User.ROLE_CHOICES)
+
     def validate(self, data):
-        user = authenticate(email=data['email'], password=data['password'])
-        if not user:
-            raise serializers.ValidationError('Invalid credentials')
-        return {'email': user.email, 'tokens': user.tokens()}
+        username = data.get("username")
+        password = data.get("password")
+        role = data.get("role")
+
+        user = authenticate(username=username, password=password)
+        
+        if user is None:
+            raise serializers.ValidationError("Invalid username or password.")
+
+        if user.role != role:
+            raise serializers.ValidationError(f"Invalid role. You are registered as a {user.role}.")
+
+        data["user"] = user
+        return data
+
+
+
+
+
+    # email = serializers.EmailField()
+    # password = serializers.CharField(write_only=True)
+    # tokens = serializers.SerializerMethodField()
+    
+    # def get_tokens(self, obj):
+    #     user = authenticate(email=obj['email'], password=obj['password'])
+    #     if user:
+    #         return user.tokens()
+    #     raise serializers.ValidationError('Invalid credentials')
+    
+    # def validate(self, data):
+    #     user = authenticate(email=data['email'], password=data['password'])
+    #     if not user:
+    #         raise serializers.ValidationError('Invalid credentials')
+    #     return {'email': user.email, 'tokens': user.tokens()}

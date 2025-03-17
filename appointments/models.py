@@ -10,9 +10,16 @@ class Appointment(models.Model):
         ('accepted', 'Accepted'),
         ('declined', 'Declined'),
     )
+
+
     patient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='appointments')
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='appointments')
     date = models.DateField()
     time = models.TimeField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     reason = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+def __str__(self):
+    return self.user.get_username()
